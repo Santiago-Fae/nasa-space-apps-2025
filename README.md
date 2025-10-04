@@ -1,114 +1,114 @@
-# 🚀 Dashboard NASA Space Apps - Publicações PMC
+# 🚀 NASA Space Apps Dashboard - PMC Publications
 
-Este é um dashboard dinâmico e interativo criado em Python usando Dash para análise de publicações científicas do PMC (PubMed Central).
+This is a dynamic and interactive dashboard created in Python using Dash for analyzing PMC (PubMed Central) scientific publications.
 
-## 📋 Funcionalidades
+## 📋 Features
 
-- **Visualização Interativa**: Gráficos dinâmicos com Plotly
-- **Filtros Avançados**: Filtre por palavras-chave e domínios
-- **Análise de Palavras-chave**: Identificação automática das palavras mais frequentes
-- **Tabela Paginada**: Visualização completa dos dados com paginação
-- **Design Responsivo**: Interface adaptável para diferentes dispositivos
-- **Estatísticas em Tempo Real**: Cards com métricas importantes
+- **Interactive Visualization**: Dynamic charts with Plotly
+- **Advanced Filters**: Filter by keywords and domains
+- **Keyword Analysis**: Automatic identification of most frequent words
+- **Paginated Table**: Complete data visualization with pagination
+- **Responsive Design**: Interface adaptable for different devices
+- **Real-time Statistics**: Cards with important metrics
 
-## 🛠️ Instalação
+## 🛠️ Installation
 
-1. **Clone o repositório** (se aplicável) ou baixe os arquivos
-2. **Instale as dependências**:
+1. **Clone the repository** (if applicable) or download the files
+2. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-## 🚀 Como Executar
+## 🚀 How to Run
 
-1. **Certifique-se de que o arquivo CSV está no mesmo diretório**:
+1. **Make sure the CSV file is in the same directory**:
    - `SB_publication_PMC.csv`
 
-2. **Execute a aplicação**:
+2. **Run the application**:
    ```bash
    python dashboard.py
    ```
 
-3. **Acesse o dashboard**:
-   - Abra seu navegador e vá para: `http://localhost:8050`
+3. **Access the dashboard**:
+   - Open your browser and go to: `http://localhost:8050`
 
-## 📊 Recursos do Dashboard
+## 📊 Dashboard Features
 
-### Cards de Estatísticas
-- Total de publicações
-- Número de domínios únicos
-- Palavras-chave analisadas
-- Tamanho médio dos títulos
+### Statistics Cards
+- Total publications
+- Number of unique domains
+- Keywords analyzed
+- Average title length
 
-### Gráficos Interativos
-1. **Top 15 Palavras-chave**: Gráfico de barras horizontal mostrando as palavras mais frequentes
-2. **Distribuição por Domínio**: Gráfico de pizza com a distribuição dos domínios
-3. **Distribuição do Tamanho dos Títulos**: Histograma mostrando a distribuição dos tamanhos
+### Interactive Charts
+1. **Top 15 Keywords**: Horizontal bar chart showing the most frequent words
+2. **Distribution by Domain**: Pie chart with domain distribution
+3. **Title Length Distribution**: Histogram showing title size distribution
 
-### Filtros Dinâmicos
-- **Filtro por Palavra-chave**: Selecione uma ou mais palavras para filtrar os dados
-- **Filtro por Domínio**: Filtre por domínios específicos
+### Dynamic Filters
+- **Keyword Filter**: Select one or more words to filter the data
+- **Domain Filter**: Filter by specific domains
 
-### Tabela de Dados
-- Visualização completa dos dados
-- Paginação automática (10 itens por página)
-- Ordenação por qualquer coluna
-- Filtros nativos
-- Links clicáveis para as publicações
+### Data Table
+- Complete data visualization
+- Automatic pagination (10 items per page)
+- Sorting by any column
+- Native filters
+- Clickable links to publications
 
-## 🔧 Tecnologias Utilizadas
+## 🔧 Technologies Used
 
-- **Dash**: Framework web para aplicações analíticas
-- **Plotly**: Gráficos interativos
-- **Pandas**: Manipulação de dados
-- **Bootstrap**: Design responsivo
-- **Python**: Linguagem principal
+- **Dash**: Web framework for analytical applications
+- **Plotly**: Interactive charts
+- **Pandas**: Data manipulation
+- **Bootstrap**: Responsive design
+- **Python**: Main language
 
-## 📁 Estrutura dos Arquivos
+## 📁 File Structure
 
 ```
-├── dashboard.py              # Aplicação principal
-├── requirements.txt          # Dependências Python
-├── SB_publication_PMC.csv    # Dados das publicações
-└── README.md                 # Este arquivo
+├── dashboard.py              # Main application
+├── requirements.txt          # Python dependencies
+├── SB_publication_PMC.csv    # Publication data
+└── README.md                 # This file
 ```
 
-## 🎨 Personalização
+## 🎨 Customization
 
-O dashboard pode ser facilmente personalizado:
+The dashboard can be easily customized:
 
-- **Cores**: Modifique os temas Bootstrap em `dbc.themes.BOOTSTRAP`
-- **Gráficos**: Adicione novos gráficos usando Plotly
-- **Filtros**: Implemente novos filtros conforme necessário
-- **Layout**: Ajuste o layout usando componentes Bootstrap
+- **Colors**: Modify Bootstrap themes in `dbc.themes.BOOTSTRAP`
+- **Charts**: Add new charts using Plotly
+- **Filters**: Implement new filters as needed
+- **Layout**: Adjust layout using Bootstrap components
 
-## 🌐 Acesso Remoto
+## 🌐 Remote Access
 
-Para acessar o dashboard de outros dispositivos na mesma rede:
+To access the dashboard from other devices on the same network:
 
-1. Execute com: `python dashboard.py`
-2. Acesse: `http://[SEU_IP]:8050`
+1. Run with: `python dashboard.py`
+2. Access: `http://[YOUR_IP]:8050`
 
-## 📈 Análises Disponíveis
+## 📈 Available Analyses
 
-- **Análise de Frequência**: Identificação das palavras-chave mais importantes
-- **Análise de Domínios**: Distribuição das fontes das publicações
-- **Análise de Tamanho**: Padrões no tamanho dos títulos
-- **Filtros Dinâmicos**: Análise segmentada dos dados
+- **Frequency Analysis**: Identification of the most important keywords
+- **Domain Analysis**: Distribution of publication sources
+- **Size Analysis**: Patterns in title lengths
+- **Dynamic Filters**: Segmented data analysis
 
-## 🔍 Como Usar
+## 🔍 How to Use
 
-1. **Explore os gráficos**: Clique e arraste para zoom, hover para detalhes
-2. **Use os filtros**: Selecione palavras-chave ou domínios para análise específica
-3. **Navegue pela tabela**: Use paginação e ordenação para encontrar dados específicos
-4. **Clique nos links**: Acesse diretamente as publicações originais
+1. **Explore the charts**: Click and drag to zoom, hover for details
+2. **Use filters**: Select keywords or domains for specific analysis
+3. **Navigate the table**: Use pagination and sorting to find specific data
+4. **Click links**: Access original publications directly
 
-## 🐛 Solução de Problemas
+## 🐛 Troubleshooting
 
-- **Erro de importação**: Verifique se todas as dependências estão instaladas
-- **Arquivo não encontrado**: Certifique-se de que o CSV está no diretório correto
-- **Porta ocupada**: Mude a porta no código se 8050 estiver em uso
+- **Import error**: Check if all dependencies are installed
+- **File not found**: Make sure the CSV is in the correct directory
+- **Port occupied**: Change the port in the code if 8050 is in use
 
-## 📝 Licença
+## 📝 License
 
-Este projeto é parte do NASA Space Apps Challenge 2025.
+This project is part of the NASA Space Apps Challenge 2025.
