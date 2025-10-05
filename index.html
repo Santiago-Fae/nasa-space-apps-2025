@@ -1,267 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Space Biology — Knowledge Explorer</title>
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href="styles.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap"
-            rel="stylesheet"
-        />
-        <!-- d3-force for physics (small dependency, great performance) -->
-        <script src="https://d3js.org/d3.v7.min.js"></script>
-    </head>
-    <body>
-        <header class="site-header container">
-            <div class="brand">
-                <h1>Space Biology</h1>
-                <p class="subtitle">Knowledge engine</p>
-                <p class="tagline">
-                    Enabling a new era of human space exploration
-                </p>
-            </div>
-            <div class="brand-mark" aria-hidden="true">
-                <img
-                    class="logo_img"
-                    src="walking-pothos-cGPdpbuxPe.svg"
-                    alt=""
-                />
-            </div>
-        </header>
+<head>
+  <meta charset="utf-8" />
+  <title>Space Biology — Knowledge Explorer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- d3-force for physics (small dependency, great performance) -->
+  <script src="https://unpkg.com/d3-force@3"></script>
+</head>
+<body>
+  <header class="site-header container">
+    <div class="brand">
+      <h1>Space Biology</h1>
+      <p class="subtitle">Knowledge engine</p>
+      <p class="tagline">Enabling a new era of human space exploration</p>
+    </div>
+    <div class="brand-mark" aria-hidden="true">
+      <img class="logo_img" src="walking-pothos-cGPdpbuxPe.svg" alt="" />
+    </div>
+  </header>
 
-        <!-- HOME VIEW -->
-        <main id="home-view" class="view active">
-            <!-- Carousel -->
-            <section class="carousel-wrap container">
-                <button class="carousel-nav prev" aria-label="Previous slide">
-                    ‹
-                </button>
-                <div
-                    class="carousel"
-                    role="region"
-                    aria-roledescription="carousel"
-                    aria-label="Highlights"
-                >
-                    <div class="carousel-slide">
-                        <div class="slide-text">
-                            <p id="slideCopy">
-                                Explore hundreds of NASA bioscience articles.
-                                Filter, search, and map how topics connect.
-                            </p>
-                        </div>
-                        <div class="slide-art">
-                            <img
-                                id="slideImg"
-                                src="planet.png"
-                                alt="Illustration of a ringed planet"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <button class="carousel-nav next" aria-label="Next slide">
-                    ›
-                </button>
-            </section>
+  <!-- HOME VIEW -->
+  <main id="home-view" class="view active">
+    <!-- Carousel -->
+    <section class="carousel-wrap container">
+      <button class="carousel-nav prev" aria-label="Previous slide">‹</button>
+      <div class="carousel" role="region" aria-roledescription="carousel" aria-label="Highlights">
+        <div class="carousel-slide">
+          <div class="slide-text">
+            <p id="slideCopy">
+              Explore hundreds of NASA bioscience articles. Filter, search, and map how topics connect.
+            </p>
+          </div>
+          <div class="slide-art">
+            <img id="slideImg" src="planet.png" alt="Illustration of a ringed planet" />
+          </div>
+        </div>
+      </div>
+      <button class="carousel-nav next" aria-label="Next slide">›</button>
+    </section>
 
-            <!-- Promo -->
-            <section class="promo-band">
-                <div class="container">
-                    <h2>
-                        Explore findings and impacts from NASA Bioscience
-                        articles.
-                    </h2>
-                </div>
-            </section>
+    <!-- Promo -->
+    <section class="promo-band">
+      <div class="container">
+        <h2>Explore findings and impacts from NASA Bioscience articles.</h2>
+      </div>
+    </section>
 
-            <!-- Visual Explorer CTA -->
-            <section class="explorer container">
-                <div class="explorer-icon" aria-hidden="true">
-                    <img
-                        src="https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/graph.svg"
-                        alt=""
-                    />
-                </div>
-                <div class="explorer-copy">
-                    <h3>Visual Explorer</h3>
-                    <p>
-                        Traverse the articles and uncover interconnected
-                        breakthroughs and discoveries.
-                    </p>
-                    <button id="startExploring" class="primary">
-                        Start Exploring <span aria-hidden="true">➜</span>
-                    </button>
-                </div>
-            </section>
+    <!-- Visual Explorer CTA -->
+    <section class="explorer container">
+      <div class="explorer-icon" aria-hidden="true">
+        <img src="https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/graph.svg" alt="" />
+      </div>
+      <div class="explorer-copy">
+        <h3>Visual Explorer</h3>
+        <p>Traverse the articles and uncover interconnected breakthroughs and discoveries.</p>
+        <button id="startExploring" class="primary">
+          Start Exploring <span aria-hidden="true">➜</span>
+        </button>
+      </div>
+    </section>
 
-            <!-- Finder -->
-            <section class="finder container">
-                <h3 class="finder-title">Find a specific article</h3>
+    <!-- Finder -->
+    <section class="finder container">
+      <h3 class="finder-title">Find a specific article</h3>
 
-                <div class="finder-grid">
-                    <!-- Keywords -->
-                    <div class="card">
-                        <div class="card-title">
-                            <span class="icon" aria-hidden="true">🔎</span>
-                            <h4>Keywords</h4>
-                        </div>
-                        <div class="options two-col" id="keywordGroup">
-                            <label
-                                ><input type="checkbox" value="microgravity" />
-                                Microgravity</label
-                            >
-                            <label
-                                ><input type="checkbox" value="immunology" />
-                                Immunology</label
-                            >
-                            <label
-                                ><input
-                                    type="checkbox"
-                                    value="gene expression"
-                                />
-                                Gene Expression</label
-                            >
-                            <label
-                                ><input
-                                    type="checkbox"
-                                    value="space operations"
-                                />
-                                Space Operations</label
-                            >
-                            <label
-                                ><input type="checkbox" value="hardware" />
-                                Hardware</label
-                            >
-                            <label
-                                ><input type="checkbox" value="stem cells" />
-                                Stem Cells</label
-                            >
-                        </div>
-                    </div>
+      <div class="finder-grid">
+        <!-- Keywords -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon" aria-hidden="true">🔎</span>
+            <h4>Keywords</h4>
+          </div>
+          <div class="options two-col" id="keywordGroup">
+            <label><input type="checkbox" value="microgravity"> Microgravity</label>
+            <label><input type="checkbox" value="immunology"> Immunology</label>
+            <label><input type="checkbox" value="gene expression"> Gene Expression</label>
+            <label><input type="checkbox" value="space operations"> Space Operations</label>
+            <label><input type="checkbox" value="hardware"> Hardware</label>
+            <label><input type="checkbox" value="stem cells"> Stem Cells</label>
+          </div>
+        </div>
 
-                    <!-- Interests -->
-                    <div class="card">
-                        <div class="card-title">
-                            <span class="icon" aria-hidden="true">👤</span>
-                            <h4>Interests</h4>
-                        </div>
-                        <div class="interest-input">
-                            <input
-                                id="interestInput"
-                                type="text"
-                                placeholder="Add an interest…"
-                                aria-label="Add an interest"
-                            />
-                            <button id="addInterest" class="secondary">
-                                Add
-                            </button>
-                        </div>
-                        <ul class="interest-rules">
-                            <li>
-                                Show me articles related to my major of biology
-                                <button class="chip-delete">Delete</button>
-                            </li>
-                        </ul>
-                        <div
-                            id="interestChips"
-                            class="chips"
-                            aria-live="polite"
-                        ></div>
-                    </div>
-                </div>
+        <!-- Interests -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon" aria-hidden="true">👤</span>
+            <h4>Interests</h4>
+          </div>
+          <div class="interest-input">
+            <input id="interestInput" type="text" placeholder="Add an interest…" aria-label="Add an interest" />
+            <button id="addInterest" class="secondary">Add</button>
+          </div>
+          <ul class="interest-rules">
+            <li>Show me articles related to my major of biology <button class="chip-delete">Delete</button></li>
+          </ul>
+          <div id="interestChips" class="chips" aria-live="polite"></div>
+        </div>
+      </div>
 
-                <div class="actions">
-                    <button id="searchBtn" class="primary">Search</button>
-                </div>
-            </section>
+      <div class="actions">
+        <button id="searchBtn" class="primary">Search</button>
+      </div>
+    </section>
 
-            <!-- Results -->
-            <section class="results container">
-                <h3 class="results-title">Results</h3>
-                <div class="results-box">
-                    <ol
-                        id="resultsList"
-                        class="results-list"
-                        aria-live="polite"
-                    ></ol>
-                </div>
-            </section>
-        </main>
+    <!-- Results -->
+    <section class="results container">
+      <h3 class="results-title">Results</h3>
+      <div class="results-box">
+        <ol id="resultsList" class="results-list" aria-live="polite"></ol>
+      </div>
+    </section>
+  </main>
 
-        <!-- EXPLORER VIEW (PDF turned webpage) -->
-        <main id="explorer-view" class="view">
-            <section class="container explorer-hero">
-                <div class="hero-left">
-                    <h2>Visual Explorer</h2>
-                    <p class="hero-desc">
-                        Traverse the various articles and uncover a trove of
-                        scientific breakthroughs and discoveries.
-                    </p>
-                </div>
-                <div class="hero-right">
-                    <button class="secondary" id="backHome">← Back</button>
-                </div>
-            </section>
+  <!-- EXPLORER VIEW (PDF turned webpage) -->
+  <main id="explorer-view" class="view">
+    <section class="container explorer-hero">
+      <div class="hero-left">
+        <h2>Visual Explorer</h2>
+        <p class="hero-desc">
+          Traverse the various articles and uncover a trove of scientific breakthroughs and discoveries.
+        </p>
+      </div>
+      <div class="hero-right">
+        <button class="secondary" id="backHome">← Back</button>
+      </div>
+    </section>
 
-            <!-- Keyword map (from the PDF content) -->
-            <section class="container keyword-map">
-                <h3>Keyword map</h3>
-                <div
-                    class="keyword-cloud"
-                    id="keywordCloud"
-                    aria-label="Keyword map"
-                >
-                    <!-- Filled by script with PDF keywords -->
-                </div>
-            </section>
+    <!-- Keyword map (from the PDF content) -->
+    <section class="container keyword-map">
+      <h3>Keyword map</h3>
+      <div class="keyword-cloud" id="keywordCloud" aria-label="Keyword map">
+        <!-- Filled by script with PDF keywords -->
+      </div>
+    </section>
 
-            <!-- Interactive Graph -->
-            <section class="container graph-panel">
-                <div class="graph-controls">
-                    <label
-                        >Edge threshold (shared categories):
-                        <span id="threshVal">1</span></label
-                    >
-                    <input
-                        id="threshold"
-                        type="range"
-                        min="1"
-                        max="3"
-                        step="1"
-                        value="1"
-                    />
-                    <label>Filter by category</label>
-                    <select id="categoryFilter">
-                        <option value="">(all)</option>
-                    </select>
-                    <label>Search title</label>
-                    <input
-                        id="searchBox"
-                        type="text"
-                        placeholder="type to highlight…"
-                    />
-                </div>
-                <div class="graph-wrap">
-                    <canvas id="graphCanvas" width="1400" height="900"></canvas>
-                    <div
-                        id="tooltip"
-                        class="tooltip"
-                        role="tooltip"
-                        hidden
-                    ></div>
-                </div>
-                <p class="graph-note">
-                    Tip: drag canvas to pan; scroll to zoom; click a node to
-                    open the article.
-                </p>
-            </section>
-        </main>
+    <!-- Interactive Graph -->
+    <section class="container graph-panel">
+      <div class="graph-controls">
+        <label>Edge threshold (shared categories): <span id="threshVal">1</span></label>
+        <input id="threshold" type="range" min="1" max="3" step="1" value="1" />
+        <label>Filter by category</label>
+        <select id="categoryFilter">
+          <option value="">(all)</option>
+        </select>
+        <label>Search title</label>
+        <input id="searchBox" type="text" placeholder="type to highlight…" />
+      </div>
+      <div class="graph-wrap">
+        <canvas id="graphCanvas" width="1400" height="900"></canvas>
+        <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+      </div>
+      <p class="graph-note">
+        Tip: drag canvas to pan; scroll to zoom; click a node to open the article.
+      </p>
+    </section>
+  </main>
 
-        <footer class="site-footer container">
-            <small>© <span id="year"></span> Space Biology</small>
-        </footer>
+  <footer class="site-footer container">
+    <small>© <span id="year"></span> Space Biology</small>
+  </footer>
 
-        <script src="script.js"></script>
-    </body>
+  <script src="script.js"></script>
+</body>
 </html>
