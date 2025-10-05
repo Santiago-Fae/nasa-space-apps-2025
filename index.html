@@ -205,13 +205,7 @@
             <!-- Keyword map (from the PDF content) -->
             <section class="container keyword-map">
                 <h3>Keyword map</h3>
-                <div
-                    class="keyword-cloud"
-                    id="keywordCloud"
-                    aria-label="Keyword map"
-                >
-                    <!-- Filled by script with PDF keywords -->
-                </div>
+                <!-- keyword chips removed (kept title only) -->
             </section>
 
             <!-- Interactive Graph -->
@@ -233,6 +227,25 @@
                     <select id="categoryFilter">
                         <option value="">(all)</option>
                     </select>
+                    <label>Highlight by keyword</label>
+                    <div
+                        id="keywordFilter"
+                        class="keyword-filter"
+                        aria-label="Highlight by keyword"
+                    >
+                        <input
+                            id="kfSearch"
+                            type="search"
+                            placeholder="Filter keywords…"
+                            aria-label="Filter keywords"
+                        />
+                        <div
+                            id="kfList"
+                            class="kf-list"
+                            role="listbox"
+                            aria-multiselectable="true"
+                        ></div>
+                    </div>
                     <label>Search title</label>
                     <input
                         id="searchBox"

@@ -177,25 +177,7 @@ function escapeHtml(str) {
     );
 }
 
-/* ===== Explorer keyword cloud ===== */
-const pdfKeywords = [
-    "Bioscience",
-    "Synthetic Biology",
-    "Drug Discovery",
-    "Informatics",
-    "Genetics",
-    "CRISPR",
-    "Genome",
-    "Machine Learning",
-];
-const cloud = $("#keywordCloud");
-pdfKeywords.forEach((kw, i) => {
-    const span = document.createElement("span");
-    span.className =
-        "keyword" + (i % 3 === 0 ? " big" : i % 5 === 0 ? " alt" : "");
-    span.textContent = kw;
-    cloud.appendChild(span);
-});
+/* ===== Explorer keyword cloud removed (title retained) ===== */
 
 /* ===== Graph (Canvas + d3-force) ===== */
 const canvas = $("#graphCanvas");
@@ -204,6 +186,7 @@ let graph = { nodes: [], links: [] };
 let sim,
     transform = { x: 0, y: 0, k: 1 };
 let hovered = null;
+let selectedKeywords = new Set();
 
 /* ensure canvas has pixel size */
 function resizeCanvas() {
@@ -346,13 +329,19 @@ function draw() {
 
     ctx.globalAlpha = 0.25;
     ctx.lineWidth = 1.2;
+    const hasSelection = selectedKeywords && selectedKeywords.size > 0;
     for (const l of graph.links) {
         const xy = linkXY(l, map);
         if (!xy) continue;
+        const shared = l.shared || [];
+        const intersect = [...selectedKeywords].some((k) => shared.includes(k));
+        // If user selected keywords, only draw links that match (hide others)
+        if (hasSelection && !intersect) continue;
         ctx.beginPath();
         ctx.moveTo(xy.sx, xy.sy);
         ctx.lineTo(xy.tx, xy.ty);
-        ctx.strokeStyle = "#A3C08F";
+        ctx.strokeStyle = intersect ? "#FFD166" : "#A3C08F";
+        ctx.lineWidth = intersect ? 3 : 1.2;
         ctx.stroke();
     }
 
@@ -431,6 +420,47 @@ fetch("categorized.json")
             o.value = c;
             o.textContent = c;
             $cat.appendChild(o);
+        }
+        // populate searchable checkbox list for keyword highlighting
+        const kf = $("#keywordFilter");
+        const kfList = $("#kfList");
+        const kfSearch = $("#kfSearch");
+        if (kf && kfList) {
+            // helper to render list items based on a filter
+            function renderKfList(filter = "") {
+                kfList.innerHTML = "";
+                const f = String(filter || "").toLowerCase();
+                for (const c of allCats) {
+                    if (f && !c.toLowerCase().includes(f)) continue;
+                    const id = `kf_${c.replace(/[^a-z0-9]+/gi, "_")}`;
+                    const lbl = document.createElement("label");
+                    lbl.htmlFor = id;
+                    const cb = document.createElement("input");
+                    cb.type = "checkbox";
+                    cb.id = id;
+                    cb.value = c;
+                    cb.addEventListener("change", () => {
+                        updateSelectedKeywords();
+                    });
+                    lbl.appendChild(cb);
+                    const txt = document.createTextNode(c);
+                    lbl.appendChild(txt);
+                    kfList.appendChild(lbl);
+                }
+            }
+
+            function updateSelectedKeywords() {
+                const checked = Array.from(
+                    kfList.querySelectorAll("input:checked")
+                ).map((i) => i.value);
+                selectedKeywords = new Set(checked);
+                draw();
+            }
+
+            kfSearch.addEventListener("input", (e) =>
+                renderKfList(e.target.value)
+            );
+            renderKfList();
         }
         refreshGraph();
     })
