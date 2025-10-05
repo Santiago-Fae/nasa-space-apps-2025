@@ -432,6 +432,10 @@ fetch("categorized.json")
                       .filter(Boolean)
                 : [],
         }));
+        // assign stable pseudo-random launch years for timeline
+        assignRandomYears(RAW);
+        buildTimelineIndex(RAW);
+        renderTimeline();
         const allCats = [...new Set(RAW.flatMap((n) => n.categories))].sort();
         for (const c of allCats) {
             const o = document.createElement("option");
@@ -496,3 +500,228 @@ draw = function () {
     }
     ctx.restore();
 };
+
+/* ===== Timeline (projects per randomized year) ===== */
+let TIMELINE = { years: [], byYear: new Map() };
+
+function seededYearFor(item, min = 2010, max = new Date().getFullYear()) {
+    // simple string hash on title+id, stable across sessions
+    const str = `${item.title}|${item.id}`;
+    let h = 2166136261; // FNV-1a base
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+    }
+    const rng = Math.abs(h >>> 0) / 2 ** 32; // [0,1)
+    const year = Math.floor(min + rng * (max - min + 1));
+    return Math.max(min, Math.min(max, year));
+}
+
+function assignRandomYears(items) {
+    const min = 2010;
+    const max = new Date().getFullYear();
+    for (const it of items) it.year = seededYearFor(it, min, max);
+}
+
+function buildTimelineIndex(items) {
+    const by = new Map();
+    for (const it of items) {
+        const y = it.year;
+        if (!by.has(y)) by.set(y, []);
+        by.get(y).push(it);
+    }
+    const years = Array.from(by.keys()).sort((a, b) => a - b);
+    TIMELINE = { years, byYear: by };
+}
+
+function renderTimeline() {
+    const wrap = document.getElementById("timelineChart");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const width = Math.max(320, wrap.clientWidth || 800);
+    const height = 240;
+    const margin = { top: 10, right: 20, bottom: 32, left: 36 };
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", String(height));
+
+    const g = document.createElementNS(svg.namespaceURI, "g");
+    g.setAttribute("transform", `translate(${margin.left},${margin.top})`);
+    svg.appendChild(g);
+
+    const years = TIMELINE.years;
+    if (years.length === 0) {
+        wrap.textContent = "No data";
+        return;
+    }
+    const counts = years.map((y) => ({ year: y, count: TIMELINE.byYear.get(y).length }));
+    const minY = Math.min(...years);
+    const maxY = Math.max(...years);
+    const x = (yr) => {
+        const t = (yr - minY) / (maxY - minY || 1);
+        return Math.round(t * innerW);
+    };
+    const maxCount = Math.max(1, ...counts.map((d) => d.count));
+    const y = (c) => innerH - Math.round((c / maxCount) * innerH);
+
+    // axes
+    const axis = document.createElementNS(svg.namespaceURI, "g");
+    axis.setAttribute("fill", "#636363");
+    axis.setAttribute("font-size", "10");
+    // x-axis: show all years
+    for (let t = minY; t <= maxY; t++) {
+        const tx = x(t);
+        const line = document.createElementNS(svg.namespaceURI, "line");
+        line.setAttribute("x1", String(tx));
+        line.setAttribute("x2", String(tx));
+        line.setAttribute("y1", String(innerH + 2));
+        line.setAttribute("y2", String(innerH + 6));
+        line.setAttribute("stroke", "#cfd8dc");
+        g.appendChild(line);
+
+        const label = document.createElementNS(svg.namespaceURI, "text");
+        label.setAttribute("x", String(tx));
+        label.setAttribute("y", String(innerH + 18));
+        label.setAttribute("text-anchor", "middle");
+        label.textContent = String(t);
+        g.appendChild(label);
+    }
+    // y-axis: ticks every 2 (0,2,4,... up to next even ≥ maxCount)
+    // draw baseline at 0 (no label)
+    {
+        const gy = y(0);
+        const gl = document.createElementNS(svg.namespaceURI, "line");
+        gl.setAttribute("x1", "0");
+        gl.setAttribute("x2", String(innerW));
+        gl.setAttribute("y1", String(gy));
+        gl.setAttribute("y2", String(gy));
+        gl.setAttribute("stroke", "#90a4ae");
+        g.appendChild(gl);
+    }
+    // Build ticks every 2 and ensure last odd max is included
+    const ticks = [];
+    for (let v = 2; v <= Math.ceil(maxCount / 2) * 2; v += 2) ticks.push(v);
+    if (maxCount % 2 === 1 && !ticks.includes(maxCount)) ticks.push(maxCount);
+    for (const gv of ticks) {
+        const gy = y(gv);
+        const gl = document.createElementNS(svg.namespaceURI, "line");
+        gl.setAttribute("x1", "0");
+        gl.setAttribute("x2", String(innerW));
+        gl.setAttribute("y1", String(gy));
+        gl.setAttribute("y2", String(gy));
+        gl.setAttribute("stroke", "#e0e0e0");
+        gl.setAttribute("stroke-dasharray", "4 4");
+        g.appendChild(gl);
+        const tl = document.createElementNS(svg.namespaceURI, "text");
+        tl.setAttribute("x", String(-8));
+        tl.setAttribute("y", String(gy + 3));
+        tl.setAttribute("text-anchor", "end");
+        tl.textContent = String(gv);
+        g.appendChild(tl);
+    }
+
+    // line path
+    const path = document.createElementNS(svg.namespaceURI, "path");
+    const d = counts
+        .map((pt, i) => `${i ? "L" : "M"}${x(pt.year)},${y(pt.count)}`)
+        .join(" ");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "#1f4ba6");
+    path.setAttribute("stroke-width", "2");
+    g.appendChild(path);
+
+    // points
+    counts.forEach((pt) => {
+        const cx = x(pt.year);
+        const cy = y(pt.count);
+        const c = document.createElementNS(svg.namespaceURI, "circle");
+        c.setAttribute("cx", String(cx));
+        c.setAttribute("cy", String(cy));
+        c.setAttribute("r", "4");
+        c.setAttribute("fill", "#5b7f2a");
+        c.setAttribute("style", "cursor:pointer");
+        c.addEventListener("mouseenter", (e) => {
+            c.style.filter = "brightness(1.15)";
+            showTimelineTooltip(e, pt.year, pt.count);
+        });
+        c.addEventListener("mouseleave", () => {
+            c.style.filter = "";
+            hideTimelineTooltip();
+        });
+        // click opens list (kept)
+        c.addEventListener("click", () => showYearProjects(pt.year));
+        // touch hold support
+        let holdTimer = null;
+        c.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            holdTimer = window.setTimeout(() => {
+                showTimelineTooltip(touch, pt.year, pt.count);
+            }, 350);
+        }, { passive: false });
+        c.addEventListener("touchend", () => {
+            window.clearTimeout(holdTimer);
+            hideTimelineTooltip();
+        });
+        g.appendChild(c);
+
+        const title = document.createElementNS(svg.namespaceURI, "title");
+        title.textContent = `${pt.year}: ${pt.count} projects`;
+        c.appendChild(title);
+    });
+
+    wrap.appendChild(svg);
+}
+
+function showYearProjects(year) {
+    const host = document.getElementById("timelineDetails");
+    if (!host) return;
+    const items = TIMELINE.byYear.get(year) || [];
+    const header = `<div class="year-header"><strong>${year}</strong> — ${items.length} project(s)</div>`;
+    if (!items.length) {
+        host.innerHTML = header + `<div class="empty">No projects found.</div>`;
+        return;
+    }
+    const list = items
+        .map(
+            (it) =>
+                `<li><a href="${escapeHtml(it.link)}" target="_blank" rel="noopener">${escapeHtml(
+                    it.title
+                )}</a></li>`
+        )
+        .join("");
+    host.innerHTML = header + `<ol class="year-list">${list}</ol>`;
+}
+
+window.addEventListener("resize", () => renderTimeline());
+
+// floating tooltip for timeline points
+let timelineTip = null;
+function ensureTimelineTip() {
+    if (timelineTip) return timelineTip;
+    timelineTip = document.createElement("div");
+    timelineTip.className = "tooltip timeline-tip";
+    timelineTip.hidden = true;
+    const host = document.getElementById("timelineChart");
+    host?.appendChild(timelineTip);
+    return timelineTip;
+}
+function showTimelineTooltip(evt, year, count) {
+    const tip = ensureTimelineTip();
+    tip.hidden = false;
+    tip.innerHTML = `<strong>${year}</strong><br>${count} project(s)`;
+    const bounds = document.getElementById("timelineChart").getBoundingClientRect();
+    const x = (evt.clientX || 0) - bounds.left + 12;
+    const y = (evt.clientY || 0) - bounds.top + 12;
+    tip.style.left = x + "px";
+    tip.style.top = y + "px";
+}
+function hideTimelineTooltip() {
+    if (timelineTip) timelineTip.hidden = true;
+}
