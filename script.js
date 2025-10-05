@@ -53,42 +53,49 @@ $("#backHome").addEventListener("click", () => routeTo("home"));
 if (location.hash === "#explorer") routeTo("explorer");
 
 /* ===== Finder mock ===== */
-const chipsWrap = $("#interestChips");
+const interestList = $("#interestList");
 const interestInput = $("#interestInput");
 $("#addInterest").addEventListener("click", () => {
-    addChip(interestInput.value);
+    addInterestItem(interestInput.value);
     interestInput.value = "";
     interestInput.focus();
 });
 interestInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         e.preventDefault();
-        addChip(interestInput.value);
+        addInterestItem(interestInput.value);
         interestInput.value = "";
     }
 });
-function addChip(label) {
+
+function addInterestItem(label) {
     const val = (label || "").trim();
     if (!val) return;
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.innerHTML = `<span>${escapeHtml(
-        val
-    )}</span><button aria-label="Remove ${escapeHtml(
-        val
-    )}" title="Remove">×</button>`;
-    chip.querySelector("button").addEventListener("click", () => chip.remove());
-    chipsWrap.appendChild(chip);
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.textContent = val;
+    const btn = document.createElement("button");
+    btn.className = "chip-delete";
+    btn.textContent = "Delete";
+    btn.type = "button";
+    li.appendChild(span);
+    li.appendChild(btn);
+    interestList.appendChild(li);
 }
-$$(".chip-delete").forEach((btn) =>
-    btn.addEventListener("click", () => btn.closest("li")?.remove())
-);
+
+// event delegation for delete buttons inside the interest list
+interestList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button.chip-delete");
+    if (!btn) return;
+    const li = btn.closest("li");
+    if (li) li.remove();
+});
 
 $("#searchBtn").addEventListener("click", () => {
     const selectedKeywords = $$("#keywordGroup input:checked").map(
         (i) => i.value
     );
-    const interests = $$("#interestChips .chip span").map((s) => s.textContent);
+    const interests = $$("#interestList li span").map((s) => s.textContent);
     const items = mockSearch({ keywords: selectedKeywords, interests });
     renderResults(items);
 });
@@ -170,7 +177,7 @@ function escapeHtml(str) {
     );
 }
 
-/* ===== Explorer page: PDF → keyword cloud ===== */
+/* ===== Explorer keyword cloud ===== */
 const pdfKeywords = [
     "Bioscience",
     "Synthetic Biology",
@@ -201,12 +208,10 @@ let hovered = null;
 /* ensure canvas has pixel size */
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth || 800;
-    const h = canvas.clientHeight || 500;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    ctx.resetTransform?.(); // clear any previous transforms
-    transform = { x: canvas.width / 2, y: canvas.height / 2, k: 0.85 };
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();
 }
 window.addEventListener("resize", resizeCanvas);
@@ -234,10 +239,8 @@ canvas.addEventListener(
     "wheel",
     (e) => {
         e.preventDefault();
-        const dpr = window.devicePixelRatio || 1;
-        const offsetX = e.offsetX * dpr,
-            offsetY = e.offsetY * dpr;
-        const k = Math.exp(-e.deltaY * 0.001);
+        const { offsetX, offsetY, deltaY } = e;
+        const k = Math.exp(-deltaY * 0.001);
         const x = (offsetX - transform.x) / transform.k;
         const y = (offsetY - transform.y) / transform.k;
         transform.k *= k;
@@ -250,23 +253,24 @@ canvas.addEventListener(
 
 /* hover + click */
 canvas.addEventListener("mousemove", (e) => {
-    const dpr = window.devicePixelRatio || 1;
-    const p = screenToWorld(e.offsetX * dpr, e.offsetY * dpr);
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const sx = (e.clientX - rect.left) * scale;
+    const sy = (e.clientY - rect.top) * scale;
+    const p = screenToWorld(sx, sy);
     hovered = pickNode(p.x, p.y);
     const tip = $("#tooltip");
     if (hovered) {
         tip.hidden = false;
-        tip.style.left = e.offsetX + 14 + "px";
-        tip.style.top = e.offsetY + 14 + "px";
+        tip.style.left = e.clientX + 14 + "px";
+        tip.style.top = e.clientY + 14 + "px";
         tip.innerHTML = `<strong>${escapeHtml(hovered.title)}</strong><br>${(
             hovered.categories || []
         ).join(", ")}`;
-    } else {
-        tip.hidden = true;
-    }
+    } else tip.hidden = true;
     draw();
 });
-canvas.addEventListener("click", () => {
+canvas.addEventListener("click", (e) => {
     if (hovered && hovered.link)
         window.open(hovered.link, "_blank", "noopener");
 });
@@ -278,7 +282,6 @@ function screenToWorld(sx, sy) {
     };
 }
 
-/* node lookup */
 function nodeIndex() {
     return new Map(graph.nodes.map((n) => [n.id, n]));
 }
@@ -310,7 +313,6 @@ function nodeRadius(n, map) {
     return base + Math.min(10, deg * 1.5);
 }
 
-/* start simulation */
 function startSim() {
     if (sim) sim.stop();
     sim = d3
@@ -326,10 +328,7 @@ function startSim() {
         .force("charge", d3.forceManyBody().strength(-240))
         .force(
             "collide",
-            d3
-                .forceCollide()
-                .radius((d) => nodeRadius(d, nodeIndex()) + 4)
-                .iterations(2)
+            d3.forceCollide().radius((d) => nodeRadius(d, nodeIndex()) + 4)
         )
         .force("center", d3.forceCenter(canvas.width / 2, canvas.height / 2))
         .alpha(1)
@@ -337,17 +336,14 @@ function startSim() {
         .on("tick", draw);
 }
 
-/* draw function */
 function draw() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.k, transform.k);
 
     const map = nodeIndex();
 
-    // draw links
     ctx.globalAlpha = 0.25;
     ctx.lineWidth = 1.2;
     for (const l of graph.links) {
@@ -356,34 +352,31 @@ function draw() {
         ctx.beginPath();
         ctx.moveTo(xy.sx, xy.sy);
         ctx.lineTo(xy.tx, xy.ty);
-        ctx.strokeStyle =
-            l.weight >= 3 ? "#eab308" : l.weight >= 2 ? "#7dd3fc" : "#93c5fd";
+        ctx.strokeStyle = "#A3C08F";
         ctx.stroke();
     }
 
-    // draw nodes
     ctx.globalAlpha = 1;
     for (const n of graph.nodes) {
         const r = nodeRadius(n, map);
         ctx.beginPath();
         ctx.arc(n.x || 0, n.y || 0, r, 0, Math.PI * 2);
         const col = colorFromCategory(n.categories && n.categories[0]);
-        ctx.fillStyle = hovered && hovered.id === n.id ? "#f97316" : col;
+        ctx.fillStyle = hovered && hovered.id === n.id ? "#FFD166" : col;
         ctx.fill();
     }
 }
 
-/* deterministic color */
+/* === Green palette === */
+const PALETTE = ["#4D7C0F", "#8CBE4A", "#B2D683"];
 function colorFromCategory(cat) {
     const str = cat || "uncategorized";
     let h = 0;
     for (let i = 0; i < str.length; i++)
         h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-    const hue = Math.abs(h) % 360;
-    return `hsl(${hue},70%,55%)`;
+    return PALETTE[Math.abs(h) % PALETTE.length];
 }
 
-/* build links */
 function buildLinks(nodes, minShared = 1, allowCats = null) {
     const links = [];
     for (let i = 0; i < nodes.length; i++) {
@@ -453,7 +446,6 @@ function refreshGraph() {
     $threshVal.textContent = String(minShared);
     const selected = $cat.value;
     const allow = selected ? new Set([selected]) : null;
-
     const nodes = selected
         ? RAW.filter((n) => n.categories.includes(selected))
         : RAW.slice();
@@ -462,7 +454,6 @@ function refreshGraph() {
         nodes: nodes.map((n) => ({ ...n })),
         links: links.map((l) => ({ ...l })),
     };
-
     transform = { x: canvas.width / 2, y: canvas.height / 2, k: 0.85 };
     startSim();
 }
@@ -473,12 +464,8 @@ draw = function () {
     _drawOrig();
     const q = $q.value.trim().toLowerCase();
     if (!q) return;
-
     ctx.save();
-    ctx.translate(transform.x, transform.y);
-    ctx.scale(transform.k, transform.k);
     ctx.globalAlpha = 0.9;
-
     for (const n of graph.nodes) {
         if ((n.title || "").toLowerCase().includes(q)) {
             ctx.beginPath();
@@ -489,7 +476,7 @@ draw = function () {
                 0,
                 Math.PI * 2
             );
-            ctx.strokeStyle = "#f97316";
+            ctx.strokeStyle = "#FFD166";
             ctx.lineWidth = 2.5;
             ctx.stroke();
         }
