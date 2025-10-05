@@ -98,8 +98,24 @@ $("#searchBtn").addEventListener("click", () => {
         (i) => i.value
     );
     const interests = $$("#interestList li span").map((s) => s.textContent);
-    const items = mockSearch({ keywords: selectedKeywords, interests });
-    renderResults(items);
+    
+    // First try backend search
+    searchBackend({ keywords: selectedKeywords, interests })
+        .then(items => {
+            if (items && items.length > 0) {
+                renderResults(items);
+            } else {
+                // If backend returns no results, fallback to mock search
+                const mockItems = mockSearch({ keywords: selectedKeywords, interests });
+                renderResults(mockItems);
+            }
+        })
+        .catch(err => {
+            console.warn("Backend search failed, using mock data:", err);
+            // Fallback to mock search on error
+            const mockItems = mockSearch({ keywords: selectedKeywords, interests });
+            renderResults(mockItems);
+        });
 });
 function renderResults(items) {
     const list = $("#resultsList");
@@ -126,6 +142,41 @@ function renderResults(items) {
         list.appendChild(li);
     });
 }
+/* ===== Backend Search Function ===== */
+async function searchBackend({ keywords, interests }) {
+    try {
+        const payload = {
+            keyworks: JSON.stringify(keywords || []),
+            interests: JSON.stringify(interests || [])
+        };
+        
+        const response = await fetch('http://localhost:5000/api/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Transform backend response to match expected format
+        return (data || []).map(item => ({
+            title: item.title || 'Untitled Article',
+            url: item.url || '#',
+            tags: Array.isArray(item.tags) ? item.tags : []
+        }));
+    } catch (error) {
+        console.error('Backend search error:', error);
+        throw error;
+    }
+}
+
+/* ===== Mock Search Function ===== */
 function mockSearch({ keywords, interests }) {
     const base = [
         {
