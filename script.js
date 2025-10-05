@@ -42,10 +42,12 @@ function routeTo(view) {
         homeView.classList.remove("active");
         explorerView.classList.add("active");
         history.replaceState(null, "", "#explorer");
+        document.body.classList.add("exploring");
     } else {
         explorerView.classList.remove("active");
         homeView.classList.add("active");
         history.replaceState(null, "", "#home");
+        document.body.classList.remove("exploring");
     }
 }
 $("#startExploring").addEventListener("click", () => routeTo("explorer"));
@@ -313,7 +315,7 @@ function startSim() {
             "collide",
             d3.forceCollide().radius((d) => nodeRadius(d, nodeIndex()) + 4)
         )
-        .force("center", d3.forceCenter(canvas.width / 2, canvas.height / 2))
+        .force("center", d3.forceCenter(0, canvas.height / 6))
         .alpha(1)
         .alphaDecay(0.02)
         .on("tick", draw);
@@ -401,23 +403,60 @@ $q.addEventListener("input", draw);
 
 /* load data & initialize */
 let RAW = [];
-fetch("categorized.json")
-    .then((r) => r.json())
-    .then((data) => {
-        RAW = data.map((d) => ({
-            id: d.id,
-            title: d.title || `Article ${d.id}`,
-            link: d.link || "#",
-            categories: Array.isArray(d.categories)
-                ? d.categories
-                      .map((c) => String(c).toLowerCase().trim())
-                      .filter(Boolean)
-                : [],
-        }));
-        // assign stable pseudo-random launch years for timeline
-        assignRandomYears(RAW);
-        buildTimelineIndex(RAW);
-        renderTimeline();
+let DATES_CSV = [];
+
+// Parse CSV date string to year (safe range)
+function parseDateToYear(dateStr) {
+    if (!dateStr) return null;
+    const match = dateStr.match(/(19\d{2}|20\d{2}|2100)/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+// Load both JSON and CSV data
+Promise.all([
+    fetch("categorized.json").then(r => r.json()),
+    fetch("output_dates.csv").then(r => r.text())
+]).then(([jsonData, csvText]) => {
+    // Robust CSV parse using d3
+    const parsed = d3.csvParse(csvText);
+    DATES_CSV = parsed.map(row => ({
+        order: parseInt(row.order, 10),
+        title: row.title,
+        link: row.link,
+        date: row.date,
+        year: parseDateToYear(row.date)
+    }));
+
+    // Process JSON data
+    const linkToYear = new Map();
+    for (const r of DATES_CSV) {
+        if (!r.year) continue;
+        const key = (r.link || "").trim();
+        if (key) linkToYear.set(key, r.year);
+    }
+
+    RAW = jsonData.map((d) => ({
+        id: d.id,
+        title: d.title || `Article ${d.id}`,
+        link: d.link || "#",
+        categories: Array.isArray(d.categories)
+            ? d.categories
+                  .map((c) => String(c).toLowerCase().trim())
+                  .filter(Boolean)
+            : [],
+        // Match with CSV data by normalized link; fallback to order==id
+        year:
+            linkToYear.get((d.link || "").trim()) ??
+            DATES_CSV.find((csv) => csv.order === d.id)?.year ??
+            null,
+    }));
+
+    // Build timeline from CSV to ensure ALL dated rows appear
+    buildTimelineFromCSV(DATES_CSV);
+    renderTimeline();
+
+    // Show stats: CSV total vs plotted total; list up to 3 missing
+    showTimelineStats(DATES_CSV);
         const allCats = [...new Set(RAW.flatMap((n) => n.categories))].sort();
         for (const c of allCats) {
             const o = document.createElement("option");
@@ -521,31 +560,29 @@ draw = function () {
 /* ===== Timeline (projects per randomized year) ===== */
 let TIMELINE = { years: [], byYear: new Map() };
 
-function seededYearFor(item, min = 2010, max = new Date().getFullYear()) {
-    // simple string hash on title+id, stable across sessions
-    const str = `${item.title}|${item.id}`;
-    let h = 2166136261; // FNV-1a base
-    for (let i = 0; i < str.length; i++) {
-        h ^= str.charCodeAt(i);
-        h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-    }
-    const rng = Math.abs(h >>> 0) / 2 ** 32; // [0,1)
-    const year = Math.floor(min + rng * (max - min + 1));
-    return Math.max(min, Math.min(max, year));
-}
-
-function assignRandomYears(items) {
-    const min = 2010;
-    const max = new Date().getFullYear();
-    for (const it of items) it.year = seededYearFor(it, min, max);
-}
 
 function buildTimelineIndex(items) {
     const by = new Map();
     for (const it of items) {
         const y = it.year;
-        if (!by.has(y)) by.set(y, []);
-        by.get(y).push(it);
+        if (y && y > 0) {
+            if (!by.has(y)) by.set(y, []);
+            by.get(y).push(it);
+        }
+    }
+    const years = Array.from(by.keys()).sort((a, b) => a - b);
+    TIMELINE = { years, byYear: by };
+}
+
+// Build timeline from CSV rows (include all rows with a valid year)
+function buildTimelineFromCSV(rows) {
+    const by = new Map();
+    for (const r of rows) {
+        const y = r.year;
+        if (y && y > 0) {
+            if (!by.has(y)) by.set(y, []);
+            by.get(y).push({ title: r.title, link: r.link, year: y });
+        }
     }
     const years = Array.from(by.keys()).sort((a, b) => a - b);
     TIMELINE = { years, byYear: by };
@@ -584,8 +621,9 @@ function renderTimeline() {
         return Math.round(t * innerW);
     };
     const maxCount = Math.max(1, ...counts.map((d) => d.count));
-    const y = (c) => innerH - Math.round((c / maxCount) * innerH);
-
+    const yMax = Math.ceil(maxCount / 15) * 15;
+    const y = (c) => innerH - Math.round((c / yMax) * innerH);
+    
     // axes
     const axis = document.createElementNS(svg.namespaceURI, "g");
     axis.setAttribute("fill", "#636363");
@@ -622,8 +660,7 @@ function renderTimeline() {
     }
     // Build ticks every 2 and ensure last odd max is included
     const ticks = [];
-    for (let v = 2; v <= Math.ceil(maxCount / 2) * 2; v += 2) ticks.push(v);
-    if (maxCount % 2 === 1 && !ticks.includes(maxCount)) ticks.push(maxCount);
+    for (let v = 15; v <= maxCount + 15; v += 15) ticks.push(v);
     for (const gv of ticks) {
         const gy = y(gv);
         const gl = document.createElementNS(svg.namespaceURI, "line");
@@ -728,6 +765,26 @@ function ensureTimelineTip() {
     const host = document.getElementById("timelineChart");
     host?.appendChild(timelineTip);
     return timelineTip;
+}
+
+// Timeline stats (CSV vs plotted)
+function showTimelineStats(rows) {
+    const box = document.getElementById("timelineStats");
+    if (!box) return;
+    const totalCsv = rows.length;
+    const plotted = Array.from(TIMELINE.byYear.values()).reduce((a, b) => a + b.length, 0);
+    const missing = totalCsv - plotted;
+    if (missing <= 0) {
+        box.textContent = `${totalCsv} projects (all plotted)`;
+        return;
+    }
+    // find first 3 rows without valid year
+    const missingItems = rows.filter(r => !r.year).slice(0, 3);
+    const list = missingItems
+        .map(r => `<li>${escapeHtml(r.title)} — <span>${escapeHtml(r.date || "(no date)")}</span></li>`)
+        .join("");
+    box.innerHTML = `${totalCsv} projects • plotted = ${plotted} • missing = ${missing}` +
+        (missingItems.length ? `<ol>${list}</ol>` : "");
 }
 function showTimelineTooltip(evt, year, count) {
     const tip = ensureTimelineTip();

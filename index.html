@@ -25,7 +25,7 @@
             <div class="brand-mark" aria-hidden="true">
                 <img
                     class="logo_img"
-                    src="walking-pothos-cGPdpbuxPe.svg"
+                    src="486c63f4f97310657b5ac11d373d10e2-saturn-planet-illustration-saturn 1.png"
                     alt=""
                 />
             </div>
@@ -191,14 +191,14 @@
         <main id="explorer-view" class="view">
             <section class="container explorer-hero">
                 <div class="hero-left">
-                    <h2>Visual Explorer</h2>
+                    <h2 class="titleVisual">Visual Explorer</h2>
                     <p class="hero-desc">
                         Traverse the various articles and uncover a trove of
                         scientific breakthroughs and discoveries.
                     </p>
                 </div>
-                <div class="hero-right">
-                    <button class="secondary" id="backHome">← Back</button>
+                <div class="hero-right hero-art">
+                    <img src="knowledge-graph 1.png" alt="Knowledge graph illustration" />
                 </div>
             </section>
 
@@ -211,7 +211,7 @@
             <!-- Interactive Graph -->
             <section class="container graph-panel">
                 <div class="graph-controls">
-                    <label
+                    <label class="categoryFilterLabel" 
                         >Edge threshold (shared categories):
                         <span id="threshVal">1</span></label
                     >
@@ -223,11 +223,11 @@
                         step="1"
                         value="1"
                     />
-                    <label>Filter by category</label>
+                    <label class="categoryFilterLabel" for="categoryFilter">Filter by category</label>
                     <select id="categoryFilter">
-                        <option value="">(all)</option>
+                      <option value="">(all)</option>
                     </select>
-                    <label>Highlight by keyword</label>
+                    <label class="categoryFilterLabel" >Highlight by keyword</label>
                     <div
                         id="keywordFilter"
                         class="keyword-filter"
@@ -246,7 +246,7 @@
                             aria-multiselectable="true"
                         ></div>
                     </div>
-                    <label>Search title</label>
+                    <label class="categoryFilterLabel">Search title</label>
                     <input
                         id="searchBox"
                         type="text"
@@ -271,8 +271,12 @@
             <!-- Timeline chart -->
             <section class="container keyword-map">
                 <h3 class="titleGreen">Projects over time</h3>
+                <div id="timelineStats" class="timeline-stats" aria-live="polite"></div>
                 <div id="timelineChart" class="timeline-chart" aria-label="Projects per launch year"></div>
                 <div id="timelineDetails" class="timeline-details" aria-live="polite"></div>
+            </section>
+            <section class="container explorer-back">
+                <button class="secondary" id="backHome">← Back</button>
             </section>
         </main>
 
