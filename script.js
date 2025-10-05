@@ -205,7 +205,7 @@ function resizeCanvas() {
     const h = canvas.clientHeight || 500;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-    ctx.resetTransform?.(); // clear any previous transforms
+    // ctx.resetTransform?.(); // clear any previous transforms
     transform = { x: canvas.width / 2, y: canvas.height / 2, k: 0.85 };
     draw();
 }
@@ -320,7 +320,7 @@ function startSim() {
             d3
                 .forceLink(graph.links)
                 .id((d) => d.id)
-                .distance((l) => 160 + (l.weight || 1) * 40)
+                .distance((l) => 130 + (l.weight || 1) * 40)
                 .strength(0.05)
         )
         .force("charge", d3.forceManyBody().strength(-240))
@@ -331,7 +331,7 @@ function startSim() {
                 .radius((d) => nodeRadius(d, nodeIndex()) + 4)
                 .iterations(2)
         )
-        .force("center", d3.forceCenter(canvas.width / 2, canvas.height / 2))
+        .force("center", d3.forceCenter(0, canvas.height / 6))
         .alpha(1)
         .alphaDecay(0.02)
         .on("tick", draw);
@@ -349,7 +349,7 @@ function draw() {
 
     // draw links
     ctx.globalAlpha = 0.25;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 2.2;
     for (const l of graph.links) {
         const xy = linkXY(l, map);
         if (!xy) continue;
@@ -462,7 +462,7 @@ function refreshGraph() {
         nodes: nodes.map((n) => ({ ...n })),
         links: links.map((l) => ({ ...l })),
     };
-
+    resizeCanvas();
     transform = { x: canvas.width / 2, y: canvas.height / 2, k: 0.85 };
     startSim();
 }
@@ -485,7 +485,7 @@ draw = function () {
             ctx.arc(
                 n.x || 0,
                 n.y || 0,
-                nodeRadius(n, nodeIndex()) + 5,
+                nodeRadius(n, nodeIndex()) + 50,
                 0,
                 Math.PI * 2
             );
