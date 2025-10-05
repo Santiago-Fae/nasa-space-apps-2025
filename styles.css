@@ -110,7 +110,7 @@ h4{ font-size:1.2rem; margin:0; }
 /* Explorer (PDF → page) */
 .explorer-hero{ display:flex; align-items:center; justify-content:space-between; padding:18px 0 6px; }
 .hero-desc{ color:#565656; margin:.5rem 0 0; }
-.keyword-map{ margin:16px 0 4px; }
+.keyword-map{ margin-block: 14px; }
 .keyword-cloud{
   background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; display:flex; flex-wrap:wrap; gap:10px;
 }
@@ -118,7 +118,7 @@ h4{ font-size:1.2rem; margin:0; }
 .keyword.big{ font-size:1.1rem; background:#e9f7d9; }
 .keyword.alt{ background:#f7e59d; }
 
-.graph-panel{ margin:18px 0 40px; }
+/* .graph-panel{ margin:18px 0 40px; } */
 .graph-controls{
   background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; display:flex; gap:14px; align-items:center; flex-wrap:wrap;
 }
