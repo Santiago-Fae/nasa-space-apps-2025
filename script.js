@@ -9,12 +9,12 @@ $("#year").textContent = new Date().getFullYear();
 const slides = [
     {
         text: "Explore hundreds of NASA bioscience articles. Filter, search, and map how topics connect.",
-        img: "planet.png",
+        img: "2240692 1.png",
         alt: "Illustration of a ringed planet",
     },
     {
         text: "Build a visual map of overlapping categories and discover related work.",
-        img: "saturn_rotating.gif",
+        img: "2240692 1.png",
         alt: "Saturn rotating on its axis",
     },
 ];
