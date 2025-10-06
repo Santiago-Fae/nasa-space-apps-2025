@@ -606,3 +606,27 @@ h4 {
   font-family: sans-serif;
   margin-bottom: 20px;
 }
+
+/* Loading Spinner Styles */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-loading {
+  pointer-events: none;
+  opacity: 0.8;
+}

@@ -94,10 +94,15 @@ interestList.addEventListener("click", (e) => {
 });
 
 $("#searchBtn").addEventListener("click", () => {
+    const searchBtn = $("#searchBtn");
     const selectedKeywords = $$("#keywordGroup input:checked").map(
         (i) => i.value
     );
     const interests = $$("#interestList li span").map((s) => s.textContent);
+    
+    // Add loading state
+    searchBtn.innerHTML = 'Search <span class="loading-spinner"></span>';
+    searchBtn.classList.add('btn-loading');
     
     // First try backend search
     searchBackend({ keywords: selectedKeywords, interests })
@@ -115,6 +120,11 @@ $("#searchBtn").addEventListener("click", () => {
             // Fallback to mock search on error
             const mockItems = mockSearch({ keywords: selectedKeywords, interests });
             renderResults(mockItems);
+        })
+        .finally(() => {
+            // Remove loading state
+            searchBtn.innerHTML = 'Search';
+            searchBtn.classList.remove('btn-loading');
         });
 });
 function renderResults(items) {
